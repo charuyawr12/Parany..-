@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Janu!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Pinyon+Script&family=Parisienne&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-pink: #f4abbc; 
+            --cake-brown: #a67c52;
+            --cream-white: #ffffff;
+            --candle-red: rgba(195, 27, 27, 0.4);
+        }
+
+        body {
+            background-color: var(--bg-pink);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Times New Roman', serif;
+            overflow: hidden;
+            transition: background-color 2s ease;
+        }
+
+        /* --- CANVASES --- */
+        #confetti-canvas, #starCanvas, #heartCanvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+        }
+        #confetti-canvas { z-index: 10; }
+        #starCanvas { z-index: 1; opacity: 0; transition: opacity 2s ease; }
+        #heartCanvas { z-index: 20; opacity: 0; transition: opacity 3s ease; }
+
+        .drifting-hearts {
+            position: absolute;
+            top: -50px; width: 100%; text-align: center;
+            color: rgba(255,255,255,0.3);
+            font-size: 12px;
+            text-shadow: 40px 100px, 200px 300px, -100px 150px, 300px 50px, 400px 400px;
+            animation: drift 15s linear infinite;
+            z-index: 0;
+        }
+
+        /* --- SCENES --- */
+        .scene-cake {
+            position: absolute;
+            text-align: center;
+            z-index: 5;
+            transition: opacity 1.5s ease, transform 1.5s ease;
+        }
+
+        .scene-letter {
+            position: relative;
+            z-index: 6;
+            opacity: 0;
+            display: none;
+            transition: opacity 2s ease;
+            perspective: 1500px;
+        }
+
+        /* --- CAKE --- */
+        .cake { position: relative; width: 200px; height: 180px; margin: 0 auto 20px auto; }
+        .layer { position: absolute; background: var(--cake-brown); width: 100%; border-radius: 4px; transform: translateY(-600px); opacity: 0; }
+        .layer-bottom { height: 45px; bottom: 0; animation: drop-solid 0.6s ease-in forwards; animation-delay: 0.5s; }
+        .layer-top { height: 45px; bottom: 57px; animation: drop-solid 0.6s ease-in forwards; animation-delay: 2s; }
+        
+        .cream-drip { position: absolute; background: var(--cream-white); width: 100%; height: 12px; border-radius: 10px; z-index: 2; transform: translateY(-600px); opacity: 0; }
+        .cream-1 { bottom: 45px; animation: drop-flexible 0.8s cubic-bezier(0.47, 0, 0.745, 0.715) forwards; animation-delay: 1.2s; }
+        .cream-2 { bottom: 102px; animation: drop-flexible 0.8s cubic-bezier(0.47, 0, 0.745, 0.715) forwards; animation-delay: 2.8s; }
+        .drip-dots { position: absolute; width: 100%; height: 8px; bottom: -4px; background-image: radial-gradient(circle, var(--cream-white) 60%, transparent 66%); background-size: 20px 20px; background-repeat: repeat-x; }
+
+        .candle { position: absolute; bottom: 114px; left: 50%; transform: translateX(-50%) translateY(-600px); width: 8px; height: 35px; background: white; opacity: 0; animation: drop-solid-candle 0.6s ease-out forwards; animation-delay: 3.5s; }
+        .candle::before, .candle::after { content: ""; position: absolute; width: 100%; height: 2.22px; background: var(--candle-red); }
+        .candle::before { top: 25%; } .candle::after { top: 70%; }
+        .flame { position: absolute; top: -15px; left: 50%; transform: translateX(-50%) scale(0); width: 12px; height: 18px; background: #ffdb58; border-radius: 50% 50% 20% 20%; box-shadow: 0 0 15px #ffdb58; animation: ignite 0.5s ease-out forwards, flicker 0.1s infinite alternate; animation-delay: 4.1s; }
+
+        .cake-message { opacity: 0; color: white; animation: fadeIn 1s forwards; animation-delay: 4.5s; }
+        .main-wish { font-size: 1.8rem; font-weight: 300; margin: 0; }
+
+        /* --- ENVELOPE --- */
+        .envelope { position: relative; width: 300px; height: 200px; background: #fdfdfd; border-radius: 2px; box-shadow: 0 20px 60px rgba(255, 105, 180, 0.2); cursor: pointer; transition: transform 0.4s ease; margin: 0 auto; }
+        .envelope:hover { transform: translateY(-10px) rotateX(10deg); }
+        .flap { position: absolute; top: 0; left: 0; border-left: 150px solid transparent; border-right: 150px solid transparent; border-top: 120px solid #ececec; z-index: 4; }
+        .pocket { position: absolute; bottom: 0; left: 0; border-left: 150px solid transparent; border-right: 150px solid transparent; border-bottom: 120px solid #fff; z-index: 3; }
+        .heart-seal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -20%); width: 85px; height: 85px; background: #c62828; clip-path: path('M42 80C42 80 0 50 0 25C0 10 15 0 32 0C37 0 42 5 42 5C42 5 47 0 52 0C70 0 85 10 85 25C85 50 42 80 42 80Z'); z-index: 10; display: flex; justify-content: center; align-items: center; animation: pulse 2s infinite; }
+        .heart-text { font-family: 'Great Vibes', cursive; color: #ffd700; font-size: 15px; font-weight: bold; margin-top: -10px; }
+        .tap-hint { color: white; font-family: 'Arial', sans-serif; text-align: center; margin-top: 20px; letter-spacing: 2px; opacity: 0.8; }
+
+        /* --- LETTER --- */
+        .full-screen-wrapper { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 100; animation: zoomIn 0.8s forwards; }
+        .vintage-page { position: relative; width: 90vw; height: 90vh; max-width: 550px; background: #f4ead5; background-image: url('https://www.transparenttextures.com/patterns/handmade-paper.png'); padding: 40px; box-shadow: inset 0 0 80px rgba(0,0,0,0.1), 0 0 40px rgba(0,0,0,0.5); border: 1px solid #d2b48c; text-align: center; overflow-y: auto; box-sizing: border-box; }
+        .letter-heading { font-family: 'Parisienne', cursive; font-size: 3.5rem; color: #4b3621; margin: 10px 0; }
+        .letter-body { font-family: 'Pinyon Script', cursive; font-size: 1.7rem; line-height: 1.4; color: #3d2b1f; }
+        #close-btn { background: #c62828; color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; margin-top: 20px; }
+
+        /* --- ANIMATIONS --- */
+        @keyframes drop-solid { 0% { transform: translateY(-600px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+        @keyframes drop-solid-candle { 0% { transform: translateX(-50%) translateY(-600px); opacity: 0; } 100% { transform: translateX(-50%) translateY(0); opacity: 1; } }
+        @keyframes drop-flexible { 0% { transform: translateY(-600px) scaleY(1); opacity: 0; } 70% { transform: translateY(0) scaleY(1); opacity: 1; } 85% { transform: translateY(3px) scaleY(0.6); } 100% { transform: translateY(0) scaleY(1); opacity: 1; } }
+        @keyframes ignite { to { transform: translateX(-50%) scale(1); } }
+        @keyframes fadeIn { to { opacity: 1; } }
+        @keyframes drift { from { transform: translateY(0); } to { transform: translateY(110vh); } }
+        @keyframes flicker { from { opacity: 0.8; } to { opacity: 1; } }
+        @keyframes pulse { 0%, 100% { transform: translate(-50%, -20%) scale(1); } 50% { transform: translate(-50%, -20%) scale(1.1); } }
+        @keyframes zoomIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes flyOut { to { transform: translate(600px, -600px) scale(0) rotate(45deg); opacity: 0; } }
+
+        .hidden { display: none !important; }
+        .fly-away { animation: flyOut 1.5s forwards; }
+    </style>
+</head>
+<body>
+
+    <div class="drifting-hearts" id="drift-hearts">♥</div>
+    <canvas id="confetti-canvas"></canvas>
+    <canvas id="starCanvas"></canvas>
+    <canvas id="heartCanvas"></canvas>
+
+    <div class="scene-cake" id="cake-scene">
+        <div class="cake">
+            <div class="layer layer-bottom"></div>
+            <div class="cream-drip cream-1"><div class="drip-dots"></div></div>
+            <div class="layer layer-top"></div>
+            <div class="cream-drip cream-2"><div class="drip-dots"></div></div>
+            <div class="candle"><div class="flame"></div></div>
+        </div>
+        <div class="cake-message">
+            <h1 class="main-wish">happy birthday janu!</h1>
+        </div>
+    </div>
+
+    <div class="scene-letter" id="letter-scene">
+        <div id="envelope-wrapper">
+            <div class="envelope">
+                <div class="flap"></div>
+                <div class="pocket"></div>
+                <div class="heart-seal"><span class="heart-text">By Charu</span></div>
+            </div>
+            <p class="tap-hint">Tap to open my love...</p>
+        </div>
+
+        <div id="letter-content" class="full-screen-wrapper hidden">
+            <div class="vintage-page">
+                <h2 class="letter-heading">To My Janu</h2>
+                <div class="letter-body">
+                    <p>Happy 19th birthday! May your day go well. I love you sm and I'm lucky to have you in my lifeee. You are my Janu.</p>
+                    <p>Pyar dikhane me maut ati hai mujhe, isliye esi harkte karke bata deti hoon ki ILY. Apke liye har cringe se cringe harkate krlu yaar. Mwah!</p>
+                    <p class="closing">Love you,<br><span>(Charu)</span></p>
+                </div>
+                <button id="close-btn" class="hidden">Close & Save ❤️</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const confCanvas = document.getElementById('confetti-canvas');
+        const starCanvas = document.getElementById('starCanvas');
+        const heartCanvas = document.getElementById('heartCanvas');
+        const cakeScene = document.getElementById('cake-scene');
+        const letterScene = document.getElementById('letter-scene');
+        const driftHearts = document.getElementById('drift-hearts');
+
+        const cCtx = confCanvas.getContext('2d');
+        const sCtx = starCanvas.getContext('2d');
+        const hCtx = heartCanvas.getContext('2d');
+
+        let pieces = [];
+        let starHearts = [];
+        let movingHearts = [];
+        const heartColors = ['#FFB6C1', '#FF69B4', '#FF1493', '#DB7093', '#C71585'];
+
+        function resize() {
+            confCanvas.width = starCanvas.width = heartCanvas.width = window.innerWidth;
+            confCanvas.height = starCanvas.height = heartCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // --- CONFETTI LOGIC ---
+        class Confetti {
+            constructor() {
+                this.x = confCanvas.width / 2;
+                this.y = confCanvas.height / 2 - 50; 
+                this.size = Math.random() * 10 + 5;
+                this.color = ['#f4abbc', '#ffffff', '#ffdb58', '#a67c52'][Math.floor(Math.random() * 4)];
+                this.speedX = (Math.random() - 0.5) * 12;
+                this.speedY = (Math.random() - 0.7) * 15;
+                this.gravity = 0.3;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = Math.random() * 10;
+            }
+            update() { this.x += this.speedX; this.y += this.speedY; this.speedY += this.gravity; this.rotation += this.rotationSpeed; }
+            draw() {
+                cCtx.save();
+                cCtx.translate(this.x, this.y);
+                cCtx.rotate(this.rotation * Math.PI / 180);
+                cCtx.fillStyle = this.color;
+                cCtx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+                cCtx.restore();
+            }
+        }
+
+        function animateConfetti() {
+            cCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+            pieces.forEach((p, index) => {
+                p.update(); p.draw();
+                if (p.y > confCanvas.height) pieces.splice(index, 1);
+            });
+            if (pieces.length > 0) requestAnimationFrame(animateConfetti);
+        }
+
+        // --- STAR BACKGROUND LOGIC ---
+        class FloatingStar {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * starCanvas.width;
+                this.y = starCanvas.height + 10;
+                this.size = Math.random() * 3 + 2;
+                this.speed = Math.random() * 1 + 0.3;
+                this.opacity = Math.random() * 0.5 + 0.2;
+            }
+            draw() {
+                sCtx.fillStyle = `rgba(255, 182, 193, ${this.opacity})`;
+                sCtx.beginPath();
+                sCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                sCtx.fill();
+            }
+            update() { this.y -= this.speed; if (this.y < -10) this.reset(); }
+        }
+
+        function animateStars() {
+            sCtx.clearRect(0,0, starCanvas.width, starCanvas.height);
+            starHearts.forEach(h => { h.update(); h.draw(); });
+            requestAnimationFrame(animateStars);
+        }
+
+        // --- FINAL MOVING HEARTS LOGIC ---
+        class FinalHeart {
+            constructor(isFirst) { this.init(isFirst); }
+            init(isFirstLoad = false) {
+                this.size = Math.random() * 12 + 8;
+                this.x = Math.random() * heartCanvas.width;
+                this.y = isFirstLoad ? Math.random() * heartCanvas.height : heartCanvas.height + Math.random() * 200;
+                this.speed = Math.random() * 1.5 + 0.8; 
+                this.color = heartColors[Math.floor(Math.random() * heartColors.length)];
+                this.opacity = Math.random() * 0.6 + 0.4;
+                this.swayAmp = Math.random() * 40 + 20; 
+                this.phase = Math.random() * Math.PI * 2;
+                this.phaseSpeed = Math.random() * 0.02 + 0.01;
+            }
+            draw() {
+                hCtx.save();
+                hCtx.globalAlpha = this.opacity;
+                hCtx.fillStyle = this.color;
+                const xOffset = Math.sin(this.phase) * this.swayAmp;
+                hCtx.translate(this.x + xOffset, this.y);
+                hCtx.beginPath();
+                const d = this.size;
+                hCtx.moveTo(0, 0);
+                hCtx.bezierCurveTo(-d / 1.5, -d / 1.5, -d * 1.5, d / 3, 0, d);
+                hCtx.bezierCurveTo(d * 1.5, d / 3, d / 1.5, -d / 1.5, 0, 0);
+                hCtx.fill();
+                hCtx.restore();
+            }
+            update() {
+                this.y -= this.speed;
+                this.phase += this.phaseSpeed;
+                if (this.y < -50) this.init(false);
+            }
+        }
+
+        function animateFinalHearts() {
+            hCtx.clearRect(0, 0, heartCanvas.width, heartCanvas.height);
+            movingHearts.forEach(heart => { heart.update(); heart.draw(); });
+            requestAnimationFrame(animateFinalHearts);
+        }
+
+        // --- SEQUENCE TIMING ---
+        setTimeout(() => {
+            for (let i = 0; i < 150; i++) pieces.push(new Confetti());
+            animateConfetti();
+            cakeScene.style.opacity = '0';
+            cakeScene.style.transform = 'scale(0.8)';
+            driftHearts.style.display = 'none';
+            
+            setTimeout(() => {
+                cakeScene.classList.add('hidden');
+                document.body.style.backgroundColor = '#000';
+                letterScene.style.display = 'block';
+                starCanvas.style.opacity = '1';
+                for(let i=0; i<80; i++) starHearts.push(new FloatingStar());
+                animateStars();
+                setTimeout(() => { letterScene.style.opacity = '1'; }, 100);
+            }, 1000);
+        }, 5500); // Cake stays for 5.5s
+
+        // Letter Interaction
+        const env = document.getElementById('envelope-wrapper');
+        const letter = document.getElementById('letter-content');
+        const btn = document.getElementById('close-btn');
+
+        env.onclick = () => {
+            env.classList.add('hidden');
+            letter.classList.remove('hidden');
+            setTimeout(() => { btn.classList.remove('hidden'); }, 4000);
+        };
+
+        btn.onclick = () => {
+            letter.classList.add('hidden');
+            env.classList.remove('hidden');
+            // START FINAL EFFECT HERE
+            setTimeout(() => { 
+                env.classList.add('fly-away'); 
+                heartCanvas.style.opacity = '1';
+                for (let i = 0; i < 100; i++) movingHearts.push(new FinalHeart(true));
+                animateFinalHearts();
+            }, 200);
+        };
+    </script>
+</body>
+</html>
